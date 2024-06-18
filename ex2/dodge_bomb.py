@@ -37,6 +37,18 @@ def prepare_kk_images(kk_img_original):
     }
     return kk_images
 
+def prepare_bomb_images_and_accs():
+    """
+    爆弾の加速度リストと拡大された爆弾画像のリストを返す
+    """
+    bb_accs = [a for a in range(1, 11)]
+    bb_imgs = []
+    for r in range(1, 11):
+        bb_img = pg.Surface((20*r, 20*r), pg.SRCALPHA)
+        pg.draw.circle(bb_img, (255, 0, 0), (10*r, 10*r), 10*r)
+        bb_imgs.append(bb_img)
+    return bb_accs, bb_imgs
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -46,10 +58,10 @@ def main():
     kk_img = kk_images[(0, -5)]
     kk_rct = kk_img.get_rect()
     kk_rct.center = 900, 400
-    bb_img = pg.Surface((20, 20))  # 1辺が20の空のSurfaceを作る
-    bb_img.set_colorkey((0, 0, 0))
-    pg.draw.circle(bb_img, (255, 0, 0), (10, 10), 10)  # 空のSurfaceに赤い円を描く
-    bb_rct = bb_img.get_rect()  # 爆弾Rect
+
+    bb_accs, bb_imgs = prepare_bomb_images_and_accs()
+    bb_img = bb_imgs[0]
+    bb_rct = bb_img.get_rect()
     bb_rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
     vx, vy = +5, +5  # 爆弾の横方向速度，縦方向速度
 
@@ -76,13 +88,22 @@ def main():
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
         screen.blit(kk_img, kk_rct)
 
-        bb_rct.move_ip(vx, vy)
+        # 爆弾の拡大、加速する動き
+        idx = min(tmr // 500, 9)
+        avx = vx * bb_accs[idx]
+        avy = vy * bb_accs[idx]
+        bb_img = bb_imgs[idx]
+
+        bb_rct.move_ip(avx, avy)
         yoko, tate = check_bound(bb_rct)
-        if not yoko:  # 横方向にはみ出たら
+        if not yoko:  # 横方向にはみ出るとき
             vx *= -1
-        if not tate:  # 縦方向にはみ出たら
+        if not tate:  # 縦方向にはみ出るとき
             vy *= -1
+        bb_rct = bb_img.get_rect(center=bb_rct.center)  # 爆弾のサイズ
+
         screen.blit(bb_img, bb_rct)
+
         pg.display.update()
         tmr += 1
         clock.tick(50)

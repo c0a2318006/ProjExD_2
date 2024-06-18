@@ -49,6 +49,30 @@ def prepare_bomb_images_and_accs():
         bb_imgs.append(bb_img)
     return bb_accs, bb_imgs
 
+def show_game_over(screen):
+    """
+    ゲームオーバー画面を表示する
+    """
+    black_surface = pg.Surface((WIDTH, HEIGHT))    # ブラックアウト
+    black_surface.fill((0, 0, 0))
+    black_surface.set_alpha(128)
+    screen.blit(black_surface, (0, 0))
+
+    koakoton_img = pg.transform.rotozoom(pg.image.load("fig/8.png"), 0, 2.0)  # こうかとん画像
+    koakoton_rct_left = koakoton_img.get_rect(center=(WIDTH // 4, HEIGHT // 2))
+    koakoton_rct_right = koakoton_img.get_rect(center=(3 * WIDTH // 4, HEIGHT // 2))
+    screen.blit(koakoton_img, koakoton_rct_left)
+    screen.blit(koakoton_img, koakoton_rct_right)
+
+    font = pg.font.Font(None, 80)  # Game Overの文字表示
+    game_over_surf = font.render("Game Over", True, (255, 255, 255))
+    game_over_rect = game_over_surf.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    screen.blit(game_over_surf, game_over_rect)
+
+    pg.display.update()
+    pg.time.wait(5000)
+
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -71,8 +95,11 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
+
         if kk_rct.colliderect(bb_rct):  # 衝突判定
+            show_game_over(screen)
             return  # ゲームオーバー
+
         screen.blit(bg_img, [0, 0])
 
         key_lst = pg.key.get_pressed()
@@ -88,7 +115,7 @@ def main():
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
         screen.blit(kk_img, kk_rct)
 
-        # 爆弾の拡大、加速する動き
+        # 爆弾の拡大と加速
         idx = min(tmr // 500, 9)
         avx = vx * bb_accs[idx]
         avy = vy * bb_accs[idx]
@@ -96,12 +123,11 @@ def main():
 
         bb_rct.move_ip(avx, avy)
         yoko, tate = check_bound(bb_rct)
-        if not yoko:  # 横方向にはみ出るとき
+        if not yoko:  # 横方向にはみ出たら
             vx *= -1
-        if not tate:  # 縦方向にはみ出るとき
+        if not tate:  # 縦方向にはみ出たら
             vy *= -1
-        bb_rct = bb_img.get_rect(center=bb_rct.center)  # 爆弾のサイズ
-
+        bb_rct = bb_img.get_rect(center=bb_rct.center)  # 新しいサイズの中心を保持
         screen.blit(bb_img, bb_rct)
 
         pg.display.update()
@@ -112,4 +138,3 @@ if __name__ == "__main__":
     pg.init()
     main()
     pg.quit()
-    sys.exit()

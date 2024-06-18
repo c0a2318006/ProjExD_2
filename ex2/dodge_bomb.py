@@ -97,7 +97,7 @@ def main():
                 return
 
         if kk_rct.colliderect(bb_rct):  # 衝突判定
-            show_game_over(screen)
+            show_game_over(screen)   #ゲームオーバー画面の表示
             return  # ゲームオーバー
 
         screen.blit(bg_img, [0, 0])
